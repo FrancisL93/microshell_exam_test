@@ -19,5 +19,6 @@ typedef struct s_vars
 } t_vars;
 
 int	count_commands(char **argv, int array);
+int	ft_strlen(char *str);
 
 #endif

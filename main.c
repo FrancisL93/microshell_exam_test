@@ -14,10 +14,8 @@ void	exe(t_vars *vars, char **envp)
 		if (pid == 0) {
 			execve(vars->cmds[i][0], vars->cmds[i], envp);
 			write(STDERR_FILENO, "error: cannot execute ", 22);
-			for (int j = 0; vars->cmds[i][0][j] != '\0'; j++) {
-				write(STDERR_FILENO, &vars->cmds[i][0][j], 1);
-			}
-			write(STDERR_FILENO, "\n", 1);
+			write(STDERR_FILENO, vars->cmds[i][0], ft_strlen(vars->cmds[i][0]));
+			write(STDERR_FILENO, "this\n", 5);
 		}
 		wait(&pid);
 	}
