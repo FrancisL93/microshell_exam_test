@@ -8,11 +8,13 @@
 void	exe(t_vars *vars, char **envp)
 {
 	pid_t	pid;
+	int		fd[2];
 	int	i;
 
 	i = 0;
 	while (vars->cmds[i])
 	{
+		pipe(fd);
 		pid = fork();
 		if (pid == 0) {
 			execve(vars->cmds[i][0], vars->cmds[i], envp);
