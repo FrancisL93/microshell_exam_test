@@ -5,23 +5,47 @@
 //implement | and ;
 //built in cd with path (if err arguments  print on stderr "error: cd: bad arguments\n")
 //if cd not access write "error: cd: cannot change directory to path_to_change\n"
+void	set_pipe(t_vars *vars, int i)
+{
+	if (vars->position[i] != LAST) 
+	{
+		dup2(vars->fd[1], STDOUT_FILENO);
+		close(vars->fd[1]);
+		close(vars->fd[0]);
+	}
+}
+
+void	set_fds(t_vars *vars, int i)
+{
+	if (vars->position[i] != LAST)
+	{
+		pipe(vars->fd);
+	}
+}
+
 void	exe(t_vars *vars, char **envp)
 {
 	pid_t	pid;
-	int		fd[2];
 	int	i;
 
 	i = 0;
 	while (vars->cmds[i])
 	{
-		pipe(fd);
+		set_fds(vars, i);
 		pid = fork();
 		if (pid == 0) {
+			set_pipe(vars, i);
 			execve(vars->cmds[i][0], vars->cmds[i], envp);
 			write(STDERR_FILENO, "error: cannot execute ", 22);
 			write(STDERR_FILENO, vars->cmds[i][0], ft_strlen(vars->cmds[i][0]));
 			write(STDERR_FILENO, "\n", 1);
 			exit(127);
+		}
+		if (vars->position[i] != LAST)
+		{
+			dup2(vars->fd[0], STDIN_FILENO);
+			close(vars->fd[0]);
+			close(vars->fd[1]);
 		}
 		wait(&pid);
 		i++;
@@ -43,11 +67,11 @@ void	set_commands(t_vars *vars, char **argv)
 
 	cmd_list = 0;
 	for (int i = 0; argv[i]; i++) {
-		if (i == 0 || !strcmp(argv[i], "|") || !strcmp(argv[i], ";")) {
+		if (i == 0 || !strcmp(argv[i], "|") || !strcmp(argv[i], ";"))
+		{
 			vars->cmds[cmd_list] = &argv[++i];
-			if (i == 1 || !strcmp(argv[i - 1], ";")) {
+			if (i == 1 || !strcmp(argv[i - 1], ";"))
 				vars->position[cmd_list] = FIRST;
-			}
 			else if (argv[i + 1] == NULL || !strcmp(argv[i + 1], ";"))
 				vars->position[cmd_list] = LAST;
 			else

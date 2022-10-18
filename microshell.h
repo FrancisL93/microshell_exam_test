@@ -13,9 +13,9 @@
 
 typedef struct s_vars
 {
-	int	*position;
-	char ***cmds;
-	
+	int		fd[2];
+	int		*position;
+	char	***cmds;
 } t_vars;
 
 int	count_commands(char **argv, int array);
