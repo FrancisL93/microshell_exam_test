@@ -36,9 +36,7 @@ void	set_pipe(t_vars *vars, int i)
 void	exe(t_vars *vars, char **envp)
 {
 	pid_t	pid;
-	int	i;
 
-	i = 0;
 	for (int i = 0; vars->cmds[i]; i++) {
 		if (vars->position[i] != LAST)
 			pipe(vars->fd);
@@ -98,19 +96,8 @@ int main(int argc, char **argv, char **envp)
 	vars.position = malloc(sizeof(int) * count_commands(argv, 0));
 	set_commands(&vars, argv);
 	set_stops(&vars);
-	print_commands(&vars);
 	exe(&vars, envp);
 	free(vars.cmds);
 	free(vars.position);
 	return (0);
 }
-
-// void	print_commands(t_vars *vars) {
-// 	for (int i = 0; vars->cmds[i]; i++) {
-// 		printf("Command %d: ", i + 1);
-// 		for (int j = 0; vars->cmds[i][j]; j++) {
-// 			printf("%s ", vars->cmds[i][j]);
-// 		}
-// 		printf(" Position: %d\n", vars->position[i]);
-// 	}
-// }
