@@ -1,10 +1,27 @@
 #include "microshell.h"
 
-//receive command line as argument
-//do not build the path
-//implement | and ;
-//built in cd with path (if err arguments  print on stderr "error: cd: bad arguments\n")
-//if cd not access write "error: cd: cannot change directory to path_to_change\n"
+int	count_commands(char **argv, int array)
+{
+	int count = 1;
+
+	for (int j = 0; argv[j]; j++){
+		if (!strcmp(argv[j], "|") || strcmp(argv[j], ";"))
+			count++;
+			if (array)
+				break;
+		}
+	return (count);
+}
+
+int	ft_strlen(char *str) {
+	int	i;
+
+	i = 0;
+	while (str && str[i])
+		i++;
+	return (i);
+}
+
 void	set_pipe(t_vars *vars, int i)
 {
 	if (vars->position[i] != LAST) 
@@ -15,13 +32,6 @@ void	set_pipe(t_vars *vars, int i)
 	}
 }
 
-void	set_fds(t_vars *vars, int i)
-{
-	if (vars->position[i] != LAST)
-	{
-		pipe(vars->fd);
-	}
-}
 
 void	exe(t_vars *vars, char **envp)
 {
@@ -29,9 +39,9 @@ void	exe(t_vars *vars, char **envp)
 	int	i;
 
 	i = 0;
-	while (vars->cmds[i])
-	{
-		set_fds(vars, i);
+	for (int i = 0; vars->cmds[i]; i++) {
+		if (vars->position[i] != LAST)
+			pipe(vars->fd);
 		pid = fork();
 		if (pid == 0) {
 			set_pipe(vars, i);
@@ -48,7 +58,6 @@ void	exe(t_vars *vars, char **envp)
 			close(vars->fd[1]);
 		}
 		wait(&pid);
-		i++;
 	}
 }
 
@@ -68,30 +77,16 @@ void	set_commands(t_vars *vars, char **argv)
 	cmd_list = 0;
 	for (int i = 0; argv[i]; i++) {
 		if (i == 0 || !strcmp(argv[i], "|") || !strcmp(argv[i], ";"))
-		{
-			vars->cmds[cmd_list] = &argv[++i];
-			if (i == 1 || !strcmp(argv[i - 1], ";"))
-				vars->position[cmd_list] = FIRST;
-			else if (argv[i + 1] == NULL || !strcmp(argv[i + 1], ";"))
-				vars->position[cmd_list] = LAST;
-			else
-				vars->position[cmd_list] = OTHER;
-			cmd_list++;
-		}
+			vars->cmds[cmd_list++] = &argv[++i];
+		if (cmd_list == 1 || !strcmp(argv[i - 1], ";"))
+			vars->position[cmd_list - 1] = FIRST;
+		if (!strcmp(argv[i - 1], ";"))
+			vars->position[cmd_list - 2] = LAST;
 	}
 	vars->position[cmd_list - 1] = LAST;
 	vars->cmds[cmd_list] = NULL;
 }
 
-void	print_commands(t_vars *vars) {
-	for (int i = 0; vars->cmds[i]; i++) {
-		printf("Command %d: ", i + 1);
-		for (int j = 0; vars->cmds[i][j]; j++) {
-			printf("%s ", vars->cmds[i][j]);
-		}
-		printf(" Position: %d\n", vars->position[i]);
-	}
-}
 
 int main(int argc, char **argv, char **envp)
 {
@@ -109,3 +104,13 @@ int main(int argc, char **argv, char **envp)
 	free(vars.position);
 	return (0);
 }
+
+// void	print_commands(t_vars *vars) {
+// 	for (int i = 0; vars->cmds[i]; i++) {
+// 		printf("Command %d: ", i + 1);
+// 		for (int j = 0; vars->cmds[i][j]; j++) {
+// 			printf("%s ", vars->cmds[i][j]);
+// 		}
+// 		printf(" Position: %d\n", vars->position[i]);
+// 	}
+// }
