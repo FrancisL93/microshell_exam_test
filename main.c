@@ -1,4 +1,19 @@
-#include "microshell.h"
+# include <stdio.h>
+# include <stdlib.h>
+# include <string.h>
+# include <sys/wait.h>
+# include <unistd.h>
+
+# define OTHER	0
+# define FIRST 	1
+# define LAST	2
+
+typedef struct s_vars
+{
+	int		fd[2];
+	int		*position;
+	char	***cmds;
+} t_vars;
 
 int	count_commands(char **argv, int array)
 {
@@ -32,16 +47,34 @@ void	set_pipe(t_vars *vars, int i)
 	}
 }
 
+int	check_cd(t_vars *vars, int i)
+{
+	if (!strcmp(vars->cmds[i][0], "cd")) {
+		if (!vars->cmds[i][1] || vars->cmds[i][2])
+			write(STDERR_FILENO, "error: cd: bad arguments\n", 25);
+		else if (chdir(vars->cmds[i][1]) != 0) {
+			write(STDERR_FILENO, "error: cd: cannot change directory to ", 38);
+			write(STDERR_FILENO, vars->cmds[i][1], ft_strlen(vars->cmds[i][1]));
+			write(STDERR_FILENO, "\n", 1);
+		}
+		return (1);
+	}
+	return (0);
+}
 
 void	exe(t_vars *vars, char **envp)
 {
 	pid_t	pid;
+	int		ret;
 
+	ret = 0;
 	for (int i = 0; vars->cmds[i]; i++) {
-		if (vars->position[i] != LAST)
+		ret = check_cd(vars, i);
+		if (!ret && vars->position[i] != LAST)
 			pipe(vars->fd);
-		pid = fork();
-		if (pid == 0) {
+		if (!ret)
+			pid = fork();
+		if (!ret && pid == 0) {
 			set_pipe(vars, i);
 			execve(vars->cmds[i][0], vars->cmds[i], envp);
 			write(STDERR_FILENO, "error: cannot execute ", 22);
@@ -49,13 +82,14 @@ void	exe(t_vars *vars, char **envp)
 			write(STDERR_FILENO, "\n", 1);
 			exit(127);
 		}
-		if (vars->position[i] != LAST)
+		if (!ret && vars->position[i] != LAST)
 		{
 			dup2(vars->fd[0], STDIN_FILENO);
 			close(vars->fd[0]);
 			close(vars->fd[1]);
 		}
-		wait(&pid);
+		if (!ret)
+			wait(&pid);
 	}
 }
 
@@ -74,8 +108,13 @@ void	set_commands(t_vars *vars, char **argv)
 
 	cmd_list = 0;
 	for (int i = 0; argv[i]; i++) {
-		if (i == 0 || !strcmp(argv[i], "|") || !strcmp(argv[i], ";"))
+		if (i == 0 || !strcmp(argv[i], "|") || !strcmp(argv[i], ";")) {
+			while (argv[i + 1] && !strcmp(argv[i + 1], ";"))
+				i++;
+			if (!argv[i + 1])
+				break ;
 			vars->cmds[cmd_list++] = &argv[++i];
+		}
 		if (cmd_list == 1 || !strcmp(argv[i - 1], ";"))
 			vars->position[cmd_list - 1] = FIRST;
 		if (!strcmp(argv[i - 1], ";"))
