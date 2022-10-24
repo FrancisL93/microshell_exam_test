@@ -4,7 +4,6 @@
 # include <sys/wait.h>
 # include <unistd.h>
 
-# define OTHER	0
 # define FIRST 	1
 # define LAST	2
 
@@ -29,9 +28,8 @@ int	count_commands(char **argv, int array)
 }
 
 int	ft_strlen(char *str) {
-	int	i;
+	int	i = 0;
 
-	i = 0;
 	while (str && str[i])
 		i++;
 	return (i);
@@ -65,9 +63,8 @@ int	check_cd(t_vars *vars, int i)
 void	exe(t_vars *vars, char **envp)
 {
 	pid_t	pid;
-	int		ret;
+	int		ret = 0;
 
-	ret = 0;
 	for (int i = 0; vars->cmds[i]; i++) {
 		ret = check_cd(vars, i);
 		if (!ret && vars->position[i] != LAST)
@@ -104,9 +101,8 @@ void	set_stops(t_vars *vars) {
 
 void	set_commands(t_vars *vars, char **argv)
 {
-	int	cmd_list;
+	int cmd_list = 0;
 
-	cmd_list = 0;
 	for (int i = 0; argv[i]; i++) {
 		if (i == 0 || !strcmp(argv[i], "|") || !strcmp(argv[i], ";")) {
 			while (argv[i + 1] && !strcmp(argv[i + 1], ";"))
@@ -131,8 +127,8 @@ int main(int argc, char **argv, char **envp)
 
 	if (argc == 1)
 		return (0);
-	vars.cmds = malloc(sizeof(char **) * count_commands(argv, 0));
 	vars.position = malloc(sizeof(int) * count_commands(argv, 0));
+	vars.cmds = malloc(sizeof(char **) * count_commands(argv, 0));
 	set_commands(&vars, argv);
 	set_stops(&vars);
 	exe(&vars, envp);
