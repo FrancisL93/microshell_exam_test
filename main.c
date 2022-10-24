@@ -14,15 +14,13 @@ typedef struct s_vars
 	char	***cmds;
 } t_vars;
 
-int	count_commands(char **argv, int array)
+int	count_commands(char **argv)
 {
 	int count = 1;
 
 	for (int j = 0; argv[j]; j++){
 		if (!strcmp(argv[j], "|") || strcmp(argv[j], ";"))
 			count++;
-			if (array)
-				break;
 		}
 	return (count);
 }
@@ -120,15 +118,14 @@ void	set_commands(t_vars *vars, char **argv)
 	vars->cmds[cmd_list] = NULL;
 }
 
-
 int main(int argc, char **argv, char **envp)
 {
 	t_vars	vars;
 
 	if (argc == 1)
 		return (0);
-	vars.position = malloc(sizeof(int) * count_commands(argv, 0));
-	vars.cmds = malloc(sizeof(char **) * count_commands(argv, 0));
+	vars.position = malloc(sizeof(int) * count_commands(argv));
+	vars.cmds = malloc(sizeof(char **) * count_commands(argv));
 	set_commands(&vars, argv);
 	set_stops(&vars);
 	exe(&vars, envp);
